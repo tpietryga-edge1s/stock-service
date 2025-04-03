@@ -51,12 +51,12 @@ public class StockService {
 			if (order.getStatus().equals(Status.CONFIRMED)) {
 				product.setItemsReserved(product.getItemsReserved() - order.getProductCount());
 				productRepository.save(product);
-				log.info("Confirm: product saved{}", product);
+				log.info("Confirm: confirm: product saved{}", product);
 			} else if (order.getStatus().equals(Status.ROLLBACK)) {
 				product.setItemsReserved(product.getItemsReserved() - order.getProductCount());
 				product.setItemsAvailable(product.getItemsAvailable() + order.getProductCount());
 				productRepository.save(product);
-				log.info("Confirm: product saved{}", product);
+				log.info("Confirm: rollback: product saved{}", product);
 			} else {
 				log.warn("Confirm: incorrect order status: {}", order.getStatus());
 			}
