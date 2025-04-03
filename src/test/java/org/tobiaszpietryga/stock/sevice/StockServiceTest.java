@@ -17,7 +17,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.tobiaszpietryga.order.common.model.Order;
 import org.tobiaszpietryga.order.common.model.Status;
 import org.tobiaszpietryga.stock.doman.Product;
-import org.tobiaszpietryga.stock.repository.CustomerRepository;
+import org.tobiaszpietryga.stock.repository.ProductRepository;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,28 +25,28 @@ import static org.mockito.ArgumentMatchers.eq;
 @ExtendWith(MockitoExtension.class)
 class StockServiceTest {
 
-	public static final String PAYMENT_ORDERS = "payment-orders";
+	public static final String STOCK_ORDERS = "stock-orders";
 	@Mock
 	KafkaTemplate<Long, Order> kafkaTemplate;
 	@InjectMocks
 	StockService underTest;
 	@Mock
-	CustomerRepository customerRepository;
+	ProductRepository productRepository;
 
 	@Captor
 	ArgumentCaptor<Order> orderCaptor;
 	@Captor
-	ArgumentCaptor<Product> customerCaptor;
+	ArgumentCaptor<Product> productArgumentCaptor;
 
 	@BeforeEach
 	void setUp() {
 	}
 
 	@Test
-	void shouldReservePayment_whenNoPendingPaymentIsPresent() {
+	void shouldReserveStock_whenNoPendingStockIsPresent() {
 		//given
-		Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(prepareCustomer(20, 0)));
-		ReflectionTestUtils.setField(underTest, "topicName", PAYMENT_ORDERS);
+		Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(prepareProduct(20, 0)));
+		ReflectionTestUtils.setField(underTest, "topicName", STOCK_ORDERS);
 
 		//when
 		underTest.reserveStock(prepareOrder(Status.NEW, false, 4));
@@ -54,14 +54,14 @@ class StockServiceTest {
 		//then
 		assertOrderSentToKafka(Status.PARTIALLY_CONFIRMED, Boolean.TRUE);
 
-		assertCustomerAmounts(16, 4);
+		assertProductItems(16, 4);
 	}
 
 	@Test
-	void shouldRejectPayment_whenNoPendingPaymentIsPresent() {
+	void shouldRejectStock_whenNoPendingStockIsPresent() {
 		//given
-		Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(prepareCustomer(20, 0)));
-		ReflectionTestUtils.setField(underTest, "topicName", PAYMENT_ORDERS);
+		Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(prepareProduct(20, 0)));
+		ReflectionTestUtils.setField(underTest, "topicName", STOCK_ORDERS);
 
 		//when
 		underTest.reserveStock(prepareOrder(Status.NEW, false, 25));
@@ -69,64 +69,64 @@ class StockServiceTest {
 		//then
 		assertOrderSentToKafka(Status.PARTIALLY_REJECTED, Boolean.FALSE);
 
-		Mockito.verify(customerRepository, Mockito.never()).save(any());
+		Mockito.verify(productRepository, Mockito.never()).save(any());
 	}
 
 	@Test
-	void shouldConfirmPayment_whenNoPendingPaymentIsPresent() {
+	void shouldConfirmStock_whenNoPendingStockIsPresent() {
 		//given
-		Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(prepareCustomer(16, 4)));
-		ReflectionTestUtils.setField(underTest, "topicName", PAYMENT_ORDERS);
+		Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(prepareProduct(16, 4)));
+		ReflectionTestUtils.setField(underTest, "topicName", STOCK_ORDERS);
 
 		//when
-		underTest.confirmOrRollbackPayment(prepareOrder(Status.CONFIRMED, true, 4));
+		underTest.confirmOrRollbackStock(prepareOrder(Status.CONFIRMED, true, 4));
 
 		//then
-		assertCustomerAmounts(16, 0);
+		assertProductItems(16, 0);
 	}
 
 	@Test
-	void shouldRollbackPayment_whenNoPendingPaymentIsPresent() {
+	void shouldRollbackStock_whenNoPendingStockIsPresent() {
 		//given
-		Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(prepareCustomer(16, 4)));
-		ReflectionTestUtils.setField(underTest, "topicName", PAYMENT_ORDERS);
+		Mockito.when(productRepository.findById(1L)).thenReturn(Optional.of(prepareProduct(16, 4)));
+		ReflectionTestUtils.setField(underTest, "topicName", STOCK_ORDERS);
 
 		//when
-		underTest.confirmOrRollbackPayment(prepareOrder(Status.ROLLBACK, true, 4));
+		underTest.confirmOrRollbackStock(prepareOrder(Status.ROLLBACK, true, 4));
 
 		//then
-		assertCustomerAmounts(20, 0);
+		assertProductItems(20, 0);
 	}
 
-	private void assertCustomerAmounts(int availableAmount, int reservedAmount) {
-		Mockito.verify(customerRepository).save(customerCaptor.capture());
-		Product savedProduct = customerCaptor.getValue();
-		Assertions.assertThat(savedProduct.getItemsAvailable()).isEqualTo(availableAmount);
-		Assertions.assertThat(savedProduct.getItemsReserved()).isEqualTo(reservedAmount);
+	private void assertProductItems(int availableItems, int reservedItems) {
+		Mockito.verify(productRepository).save(productArgumentCaptor.capture());
+		Product savedProduct = productArgumentCaptor.getValue();
+		Assertions.assertThat(savedProduct.getItemsAvailable()).isEqualTo(availableItems);
+		Assertions.assertThat(savedProduct.getItemsReserved()).isEqualTo(reservedItems);
 	}
 
-	private static Order prepareOrder(Status status, boolean paymentStarted, int price) {
+	private static Order prepareOrder(Status status, boolean stockStarted, int productCount) {
 		return Order.builder()
 				.id(1L)
 				.status(status)
-				.customerId(1L)
-				.paymentStarted(paymentStarted)
-				.price(price)
+				.productId(1L)
+				.stockStarted(stockStarted)
+				.productCount(productCount)
 				.build();
 	}
 
-	private static Product prepareCustomer(int amountAvailable, int amountReserved) {
+	private static Product prepareProduct(int amountAvailable, int amountReserved) {
 		return Product.builder()
-				.amountAvailable(amountAvailable)
-				.amountReserved(amountReserved)
+				.itemsAvailable(amountAvailable)
+				.itemsReserved(amountReserved)
 				.id(1L)
 				.build();
 	}
 
-	private void assertOrderSentToKafka(Status status, Boolean paymentStarted) {
-		Mockito.verify(kafkaTemplate).send(eq(PAYMENT_ORDERS), eq(1L), orderCaptor.capture());
+	private void assertOrderSentToKafka(Status status, Boolean stockStarted) {
+		Mockito.verify(kafkaTemplate).send(eq(STOCK_ORDERS), eq(1L), orderCaptor.capture());
 		Order sentOrder = orderCaptor.getValue();
-		Assertions.assertThat(sentOrder.isPaymentStarted()).isEqualTo(paymentStarted);
+		Assertions.assertThat(sentOrder.isStockStarted()).isEqualTo(stockStarted);
 		Assertions.assertThat(sentOrder.getStatus()).isEqualTo(status);
 	}
 }

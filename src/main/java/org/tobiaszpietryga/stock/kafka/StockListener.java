@@ -13,13 +13,13 @@ import org.tobiaszpietryga.stock.sevice.StockService;
 @Service
 public class StockListener {
 	private final StockService stockService;
-	@KafkaListener(id = "payment-service-order-listener", topics = "${orders.topic.name}", groupId = "payment-service-order-listener")
+	@KafkaListener(id = "stock-service-order-listener", topics = "${orders.topic.name}", groupId = "stock-service-order-listener")
 	public void onEvent(Order order) {
 		log.info("Received: {}", order);
 		if (order.getStatus().equals(Status.NEW)) {
 			stockService.reserveStock(order);
 		} else {
-			stockService.confirmOrRollbackPayment(order);
+			stockService.confirmOrRollbackStock(order);
 		}
 	}
 }
