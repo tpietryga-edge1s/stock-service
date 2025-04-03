@@ -1,7 +1,5 @@
 package org.tobiaszpietryga.stock.doman;
 
-import java.math.BigDecimal;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,13 +18,13 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Customer {
+public class Product {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name;
-	private Integer amountAvailable;
-	private Integer amountReserved;
+	private Integer itemsAvailable;
+	private Integer itemsReserved;
 
 }

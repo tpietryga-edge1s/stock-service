@@ -16,7 +16,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.tobiaszpietryga.order.common.model.Order;
 import org.tobiaszpietryga.order.common.model.Status;
-import org.tobiaszpietryga.stock.doman.Customer;
+import org.tobiaszpietryga.stock.doman.Product;
 import org.tobiaszpietryga.stock.repository.CustomerRepository;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +36,7 @@ class StockServiceTest {
 	@Captor
 	ArgumentCaptor<Order> orderCaptor;
 	@Captor
-	ArgumentCaptor<Customer> customerCaptor;
+	ArgumentCaptor<Product> customerCaptor;
 
 	@BeforeEach
 	void setUp() {
@@ -100,9 +100,9 @@ class StockServiceTest {
 
 	private void assertCustomerAmounts(int availableAmount, int reservedAmount) {
 		Mockito.verify(customerRepository).save(customerCaptor.capture());
-		Customer savedCustomer = customerCaptor.getValue();
-		Assertions.assertThat(savedCustomer.getAmountAvailable()).isEqualTo(availableAmount);
-		Assertions.assertThat(savedCustomer.getAmountReserved()).isEqualTo(reservedAmount);
+		Product savedProduct = customerCaptor.getValue();
+		Assertions.assertThat(savedProduct.getItemsAvailable()).isEqualTo(availableAmount);
+		Assertions.assertThat(savedProduct.getItemsReserved()).isEqualTo(reservedAmount);
 	}
 
 	private static Order prepareOrder(Status status, boolean paymentStarted, int price) {
@@ -115,8 +115,8 @@ class StockServiceTest {
 				.build();
 	}
 
-	private static Customer prepareCustomer(int amountAvailable, int amountReserved) {
-		return Customer.builder()
+	private static Product prepareCustomer(int amountAvailable, int amountReserved) {
+		return Product.builder()
 				.amountAvailable(amountAvailable)
 				.amountReserved(amountReserved)
 				.id(1L)
