@@ -49,7 +49,7 @@ class StockServiceTest {
 		ReflectionTestUtils.setField(underTest, "topicName", PAYMENT_ORDERS);
 
 		//when
-		underTest.reservePayment(prepareOrder(Status.NEW, false, 4));
+		underTest.reserveStock(prepareOrder(Status.NEW, false, 4));
 
 		//then
 		assertOrderSentToKafka(Status.PARTIALLY_CONFIRMED, Boolean.TRUE);
@@ -64,7 +64,7 @@ class StockServiceTest {
 		ReflectionTestUtils.setField(underTest, "topicName", PAYMENT_ORDERS);
 
 		//when
-		underTest.reservePayment(prepareOrder(Status.NEW, false, 25));
+		underTest.reserveStock(prepareOrder(Status.NEW, false, 25));
 
 		//then
 		assertOrderSentToKafka(Status.PARTIALLY_REJECTED, Boolean.FALSE);

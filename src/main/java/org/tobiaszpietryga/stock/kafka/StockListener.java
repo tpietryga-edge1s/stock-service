@@ -17,7 +17,7 @@ public class StockListener {
 	public void onEvent(Order order) {
 		log.info("Received: {}", order);
 		if (order.getStatus().equals(Status.NEW)) {
-			stockService.reservePayment(order);
+			stockService.reserveStock(order);
 		} else {
 			stockService.confirmOrRollbackPayment(order);
 		}
